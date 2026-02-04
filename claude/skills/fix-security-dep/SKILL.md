@@ -1,3 +1,8 @@
+---
+name: fix-security-dep
+description: Fix security vulnerabilities from Jira tickets. Use when given a Jira URL for a security/vulnerability ticket to create a branch, update dependencies, and open a PR with breaking change analysis.
+---
+
 # Security Dependency Fix Skill
 
 Automatically fix security vulnerabilities from Jira tickets by creating a branch, updating dependencies, and opening a PR. Includes version analysis, breaking change detection, and documentation options.
