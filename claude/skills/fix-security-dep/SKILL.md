@@ -54,7 +54,9 @@ Or with the full board URL:
 
 ### Step 1: Verify Prerequisites
 
-First, use ToolSearch to find `+atlassian jira issue`. If no tools are found, display:
+Use ToolSearch with `select:mcp__plugin_atlassian_atlassian__getJiraIssue` to load the Atlassian Jira tool.
+
+If the tool is not found, display:
 
 ```
 ❌ Error: Atlassian plugin not installed.
