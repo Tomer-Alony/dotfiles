@@ -103,15 +103,19 @@ jira sprint add 11169 SP-66640
 
 ## Custom Fields
 
+All custom fields show a warning about "invalid custom fields" but they still work. Verify with JQL after setting.
+
 ### Set Group (works via CLI)
 ```bash
 jira issue edit SP-12345 --custom "Group=Infra" --no-input
 ```
 
-Note: You'll see a warning about "invalid custom fields" but it still works. Verify with:
+### Set Sub-team (works via CLI)
 ```bash
-jira issue list --jql "key = SP-12345 AND 'Group' = 'Infra'"
+jira issue edit SP-12345 --custom "Sub-team=Core" --no-input
 ```
+
+Sub-team values for Infra: `Core`, `Automation`, `DevOps`
 
 ### Set Parent Epic
 ```bash
@@ -150,9 +154,9 @@ jira issue create -t"Epic" -s"My Epic Title" -b"Description" -a"tomera@torq.io" 
 jira issue create -t"Story" -s"My Story Title" -b"Description" -a"tomera@torq.io" --no-input
 # Returns: SP-YYYYY
 
-# 3. Set Group on both
-jira issue edit SP-XXXXX --custom "Group=Infra" --no-input
-jira issue edit SP-YYYYY --custom "Group=Infra" --no-input
+# 3. Set Group and Sub-team on both
+jira issue edit SP-XXXXX --custom "Group=Infra" --custom "Sub-team=Core" --no-input
+jira issue edit SP-YYYYY --custom "Group=Infra" --custom "Sub-team=Core" --no-input
 
 # 4. Link Story to Epic
 jira issue edit SP-YYYYY -P SP-XXXXX --no-input
