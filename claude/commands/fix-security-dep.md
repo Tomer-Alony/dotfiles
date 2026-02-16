@@ -9,21 +9,9 @@ Automatically fix security vulnerabilities from Jira tickets by creating a branc
 
 ## Prerequisites
 
-**Required: Atlassian Claude Code Plugin**
+**Required: Jira CLI**
 
-This skill requires the Atlassian MCP plugin to fetch Jira ticket details and add comments.
-
-**If not installed, the skill will display:**
-```
-❌ Error: Atlassian plugin not installed.
-
-To install:
-1. Run: claude mcp add atlassian
-2. Follow the authentication prompts
-3. Try this command again.
-
-Alternatively, install via Claude Code settings → Plugins/MCP Servers → Atlassian
-```
+This skill requires the `jira` CLI tool to be installed and configured with `JIRA_API_TOKEN` environment variable set in ~/.zshrc.
 
 ## Usage
 
@@ -40,49 +28,37 @@ Or with the full board URL:
 ## Workflow Overview
 
 1. Parse Jira URL → Extract ticket number
-2. Verify Atlassian plugin is available
-3. Fetch ticket details → Extract vulnerability info
-4. **Analyze version change** → Detect major/minor/patch
-5. **Fetch release notes** → Check for breaking changes
-6. **If major upgrade** → Present options including documentation-only
-7. Based on user choice: Create PR, document findings, or skip
-8. **Include breaking change details** in PR or Jira comment
+2. Fetch ticket details using Jira CLI → Extract vulnerability info
+3. **Analyze version change** → Detect major/minor/patch
+4. **Fetch release notes** → Check for breaking changes
+5. **If major upgrade** → Present options including documentation-only
+6. Based on user choice: Create PR, document findings, or skip
+7. **Include breaking change details** in PR or Jira comment
 
 ---
 
 ## Instructions for Claude
 
-### Step 1: Verify Prerequisites
-
-First, use ToolSearch to find `+atlassian jira issue`. If no tools are found, display:
-
-```
-❌ Error: Atlassian plugin not installed.
-
-To install:
-1. Run: claude mcp add atlassian
-2. Follow the authentication prompts
-3. Try this command again.
-
-Alternatively, install via Claude Code settings → Plugins/MCP Servers → Atlassian
-```
-
-Then STOP - do not proceed further.
-
-### Step 2: Parse URL and Extract Ticket
+### Step 1: Parse URL and Extract Ticket
 
 Extract the ticket number from the URL. Patterns to match:
 - `selectedIssue=SP-12345` (board URL)
 - `/browse/SP-12345` (direct URL)
 - Just `SP-12345` (if user provides ticket number directly)
 
-### Step 3: Fetch Ticket Details
+### Step 2: Fetch Ticket Details
 
-Use `mcp__plugin_atlassian_atlassian__getJiraIssue` with:
-- `cloudId`: Extract domain from URL (e.g., `stackpulse.atlassian.net`)
-- `issueIdOrKey`: The ticket number (e.g., `SP-65058`)
+Use the Jira CLI to fetch ticket details:
+```bash
+jira issue view {TICKET} --plain
+```
 
-### Step 4: Parse Vulnerability Information
+Example:
+```bash
+jira issue view SP-65058 --plain
+```
+
+### Step 3: Parse Vulnerability Information
 
 The ticket description typically contains a table with:
 - `Library` - The package name (e.g., `apache-airflow`)
@@ -91,7 +67,7 @@ The ticket description typically contains a table with:
 - `Path` - File path to update (e.g., `/requirements.txt`)
 - `VulnerabilityId` - CVE identifier (e.g., `CVE-2025-68675`)
 
-### Step 5: Analyze Version Change (CRITICAL)
+### Step 4: Analyze Version Change (CRITICAL)
 
 Parse the semantic versions and determine the upgrade type:
 
@@ -117,7 +93,7 @@ Display to user:
    Type:    {MAJOR|MINOR|PATCH} UPGRADE
 ```
 
-### Step 6: Fetch Release Notes and Breaking Changes
+### Step 5: Fetch Release Notes and Breaking Changes
 
 Use WebSearch to find release notes:
 ```
@@ -151,7 +127,7 @@ If no release notes found:
 Please review manually: https://pypi.org/project/{library}/{new_version}/
 ```
 
-### Step 7: Handle Major Upgrades (REQUIRE APPROVAL)
+### Step 6: Handle Major Upgrades (REQUIRE APPROVAL)
 
 **If MAJOR upgrade detected, you MUST ask for approval before proceeding:**
 
@@ -183,11 +159,14 @@ options:
     description: "Do not make changes. I'll evaluate the migration separately."
 ```
 
-### Step 8: Execute Based on User Choice
+### Step 7: Execute Based on User Choice
 
 #### Option A: Document Findings Only
 
-Add a comment to the Jira ticket using `mcp__plugin_atlassian_atlassian__addCommentToJiraIssue`:
+Add a comment to the Jira ticket using the Jira CLI:
+```bash
+jira issue comment add {TICKET} "comment text"
+```
 
 ```markdown
 ## ⚠️ Analysis: Major Version Upgrade Required
@@ -236,9 +215,9 @@ To handle manually, see: {jira_url}
 
 #### Option C: Proceed with Upgrade
 
-Continue to steps 9-14.
+Continue to steps 8-13.
 
-### Step 9: Verify Clean Working Directory
+### Step 8: Verify Clean Working Directory
 
 Run `git status --porcelain` and abort if there are uncommitted changes:
 ```
@@ -246,13 +225,13 @@ Run `git status --porcelain` and abort if there are uncommitted changes:
 Please commit or stash your changes first.
 ```
 
-### Step 10: Create Branch
+### Step 9: Create Branch
 
 ```bash
 git checkout -b {TICKET}-fix-security-vulnerability
 ```
 
-### Step 11: Update Dependency
+### Step 10: Update Dependency
 
 Edit the dependency file (usually `requirements.txt` or `package.json`) to update the version.
 
@@ -261,14 +240,14 @@ For Python `requirements.txt`:
 {library}=={new_version}
 ```
 
-### Step 12: Run Tests (Optional)
+### Step 11: Run Tests (Optional)
 
 If `make test` or `pytest` is available, attempt to run tests.
 - If tests pass: Note in PR
 - If tests fail due to missing local dependencies: Note that CI will validate
 - If tests fail due to breaking changes: Include failures in PR for visibility
 
-### Step 13: Commit and Push
+### Step 12: Commit and Push
 
 ```bash
 git add {file}
@@ -281,7 +260,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 git push -u origin {branch}
 ```
 
-### Step 14: Create PR with Breaking Change Details
+### Step 13: Create PR with Breaking Change Details
 
 **For PATCH/MINOR upgrades:**
 ```bash
@@ -339,7 +318,7 @@ gh pr create --title "[{TICKET}] ⚠️ MAJOR: Fix {severity} vulnerability in {
 🤖 Generated with [Claude Code](https://claude.com/claude-code)"
 ```
 
-### Step 15: Report Results
+### Step 14: Report Results
 
 **For successful PATCH/MINOR:**
 ```
