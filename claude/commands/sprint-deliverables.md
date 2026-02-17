@@ -10,9 +10,9 @@ Generate a comprehensive summary of a Jira sprint, organized by themes with stat
 
 ## Prerequisites
 
-**Required: Atlassian Claude Code Plugin**
+**Required: Jira CLI (`jira`)**
 
-This skill requires the Atlassian MCP plugin to fetch Jira sprint data.
+This skill requires the Jira CLI to be installed and configured.
 
 ## Usage
 
@@ -49,14 +49,14 @@ Example: /sprint-deliverables Infra 155
 
 ### Step 2: Verify Prerequisites
 
-Use ToolSearch to find `+atlassian jira jql`. If no tools are found, display:
+Check if `jira` CLI is available by running `which jira`. If not found, display:
 
 ```
-❌ Error: Atlassian plugin not installed.
+❌ Error: Jira CLI not installed.
 
 To install:
-1. Run: claude mcp add atlassian
-2. Follow the authentication prompts
+1. Run: brew install ankitpokhrel/jira-cli/jira-cli
+2. Run: jira init
 3. Try this command again.
 ```
 
@@ -64,32 +64,29 @@ Then STOP.
 
 ### Step 3: Query Jira Sprint
 
-Use `mcp__plugin_atlassian_atlassian__searchJiraIssuesUsingJql` with:
-- `cloudId`: `stackpulse.atlassian.net`
-- `jql`: `project = SP AND sprint = "{team} -  Sprint {number}" ORDER BY status DESC, created DESC`
-- `fields`: `["summary", "status", "assignee", "issuetype", "parent"]`
-- `maxResults`: 100
+Use the Jira CLI to query sprint issues:
 
-**IMPORTANT:** Note the double space in sprint name format: `{team} -  Sprint {number}`
+```bash
+jira issue list --jql 'project = SP AND sprint ~ "{team}" AND sprint ~ "{number}"' --plain --columns key,summary,status,assignee,type --no-headers
+```
 
-If no results, try alternate formats:
-- `{team} - Sprint {number}` (single space)
-- `{team} Sprint {number}` (no dash)
+This uses partial matching (`~`) for both team name and sprint number, which works reliably across different sprint naming formats.
+
+If no results, try:
+```bash
+jira issue list --jql 'project = SP AND sprint = "{team} - Sprint {number}"' --plain --columns key,summary,status,assignee,type --no-headers
+```
 
 ### Step 4: Parse Results
 
-If results are saved to a file due to size, use jq to extract:
+The Jira CLI output is tab-separated with columns: key, summary, status, assignee, type
 
-```bash
-# Get total count
-jq -r '.issues.totalCount' {file}
-
-# Get status breakdown
-jq -r '[.issues.nodes[].fields.status.name] | group_by(.) | map({status: .[0], count: length}) | .[] | "\(.status): \(.count)"' {file}
-
-# Get all tickets
-jq -r '.issues.nodes[] | "\(.key): \(.fields.summary) | \(.fields.status.name) | \(.fields.assignee.displayName // "Unassigned")"' {file}
-```
+Parse each line to extract:
+- `key`: Ticket ID (e.g., SP-66908)
+- `summary`: Ticket title
+- `status`: Current status (To Do, In Progress, Done, etc.)
+- `assignee`: Assigned person (empty if unassigned)
+- `type`: Issue type (Story, Bug, Sub-task, etc.)
 
 ### Step 5: Categorize Tickets by Theme
 
@@ -97,11 +94,11 @@ Analyze ticket summaries and group them into themes. Use keyword matching:
 
 | Theme | Keywords to Match |
 |-------|-------------------|
-| R&D Alerting & Dashboards | alert, dashboard, grafana, monitor, observability, runbook, threshold |
-| Monorepo / CI/CD | monorepo, nx, ci, cd, pipeline, build, vite, webpack, eslint, prettier, github actions, workflow |
+| R&D Alerting & Dashboards | alert, dashboard, grafana, monitor, observability, runbook, threshold, airflow |
+| Monorepo / CI/CD | monorepo, nx, ci, cd, pipeline, build, vite, webpack, eslint, prettier, github actions, workflow, BUILD.yml, PR.yml |
 | Design System | DS, storybook, component, ui, chip, button, dialog, token, color, tq- |
-| Security Updates | vulnerability, CVE, security, HIGH, CRITICAL, Infra-Core |
-| Data & Infrastructure | data, pipeline, bigquery, datos, dataflow, cloud, cost, BI |
+| Security Updates | vulnerability, CVE, security, HIGH, CRITICAL, Infra-Core, Cure53, XSS |
+| Data & Infrastructure | data, pipeline, bigquery, datos, dataflow, cloud, cost, BI, ThoughtSpot, feature flag |
 | Observability | o11y, observability, tracing, metrics, logging |
 | Bug Fixes | fix, bug, error, issue, broken |
 | Features | feature, add, implement, support, new |
