@@ -103,7 +103,7 @@ After filling expense rows, automatically look up and fill exchange rates:
    - **D7**: NIS per 1 USD (if USD expenses exist)
    - **D8**: NIS per 1 EUR (if EUR expenses exist)
    - **D9**: NIS per 1 GBP (if GBP expenses exist)
-   - **D11**: USD-NIS rate (copy of D7, used by the per diem formula)
+   - **Do NOT touch D11** - it belongs to the per diem section and is managed separately by the user
 4. Note: The form says to use "the formal exchange rate of Bank Israel at the date of the expense." If expenses span multiple dates with potentially different rates, use the most recent rate and note this to the user.
 
 ### Step 7: Report Results
