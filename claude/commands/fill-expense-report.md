@@ -65,12 +65,15 @@ For each receipt file:
 
 ### Step 4: Classify Each Expense
 
-Determine the category for each receipt:
-- **Flight** (column F): Airline tickets, boarding passes
-- **Hotels** (column G): Hotel bookings, accommodation
-- **Transportation** (column H): Taxi, train, bus, ride-share
-- **Car rental** (column I): Car rental receipts
-- **Misc.** (column J): Everything else - eSIMs, phone, meals, supplies, etc.
+Determine the category based on the vendor/service. Use common sense:
+
+- **Flight** (column F): Airlines, boarding passes, flight bookings (e.g., El Al, United, Ryanair, booking confirmations with flight numbers)
+- **Hotels** (column G): Hotels, hostels, Airbnb, Booking.com, accommodation of any kind
+- **Transportation** (column H): Any ground transport - Uber, Lyft, Bolt, Gett, taxis, trains, metro/subway, buses, ferries, toll roads, parking, airport shuttles, Lime/Bird scooters
+- **Car rental** (column I): Hertz, Avis, Budget, Sixt, or any car/vehicle rental service
+- **Misc.** (column J): Only things that don't fit above - eSIMs, phone plans, SIM cards, office supplies, conference fees, visa fees, travel insurance, luggage fees
+
+**Important:** Do NOT put transportation expenses in Misc. If someone took an Uber, that's Transportation (column H), not Misc.
 
 If a receipt looks like business entertainment (dinner with clients/partners), ask the user whether to place it in Misc. or the Entertainment section.
 
