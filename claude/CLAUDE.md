@@ -46,3 +46,12 @@ When the user asks to create a new skill or command:
 
 The Jira instance is: `stackpulse.atlassian.net`
 Project key: `SP`
+
+### How to interact with Jira
+
+**ALWAYS use the `jira` CLI tool and the Jira REST API** (documented in the `/jira` skill).
+- Use `jira` CLI for creating/viewing/editing issues, sprints, and boards
+- Use the REST API (via `curl -s -u "tomera@torq.io:$JIRA_API_TOKEN"`) for setting custom fields that the CLI can't handle reliably
+- The Atlassian MCP plugin may also be available for read operations (search, fetch), but **prefer the CLI for all create/edit operations**
+- **DO NOT** use WebFetch for Jira/Confluence URLs
+- **DO NOT** delegate Jira operations to subagents (Task tool) - always use the CLI directly in the main context
