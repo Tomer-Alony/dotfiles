@@ -248,4 +248,47 @@ Error: {key error message}
 Fix: {actionable fix}
 ```
 
-If the issue matches a known pattern, reference the pattern by name so the user can quickly understand. If it's a new failure mode, investigate deeper and suggest adding it to this skill.
+If the issue matches a known pattern, reference the pattern by name so the user can quickly understand.
+
+### Step 6: Self-Update — Keep This Skill Current
+
+**CRITICAL: This skill must evolve with the pipeline.** After every investigation, perform these checks:
+
+#### 6a. Check if the failure was a NEW pattern
+If the root cause does NOT match any of the patterns above (Patterns 1-7), you MUST:
+1. Document the new pattern in the same format (Symptoms, Root Cause, Diagnosis, Fix)
+2. Edit this file at `/Users/tomeralony/go/src/github.com/dotfiles/claude/commands/investigate-ci.md` to add the new pattern
+3. Increment the pattern number and add it in the appropriate position (ordered by likelihood)
+4. Commit and push to the dotfiles repo:
+```bash
+cd /Users/tomeralony/go/src/github.com/dotfiles && git add claude/commands/investigate-ci.md && git commit -m "investigate-ci: add Pattern N — {short description}" && git push
+```
+5. Inform the user: "Added Pattern N to /investigate-ci for future reference."
+
+#### 6b. Check if an existing pattern is OUTDATED
+If during investigation you discover that:
+- A fix listed here has been reverted or changed
+- A workflow file was renamed or restructured
+- A key file path changed (nx.json line numbers, Dockerfile location, etc.)
+- A previously-missing concurrency group was added
+- NX parallelism or cache config changed
+
+Then update the relevant section in this file, commit, and push. For example:
+- If `nx.json` parallelism changes from 3 to 8, update the "Key files" section
+- If `microcopy_review.yaml` gets a concurrency group, remove it from the "Known missing" list
+- If a new workflow is added to the PR trigger set, add it to the "Workflows triggered on PR" table
+
+#### 6c. Refresh pipeline architecture from source
+If the investigation reveals the architecture reference is stale, re-read the actual workflow files to update:
+```bash
+# Key files to re-check:
+# .github/workflows/pr.yaml — job dependency chain, merge gates
+# .github/workflows/build-nx.yml — build steps, NX commands
+# .github/actions/nx-setup/action.yml — setup steps, auth
+# nx.json — parallelism, cache config
+# build/preview/Dockerfile — which apps are built
+```
+Update the "Pipeline Architecture Reference" section accordingly.
+
+#### 6d. Track pattern frequency
+When a known pattern is hit, note it to the user: "This is Pattern N ({name}) — seen previously." This helps identify recurring issues that warrant permanent fixes rather than ad-hoc debugging.
